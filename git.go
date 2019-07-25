@@ -213,17 +213,25 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 			}
 		}
-	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
-		log.Errorf("Error getting diff file: %s", err)
-		if err := run(gitCmd.Checkout(branchDest)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
-		}
-		if err := run(gitCmd.Apply(patch)); err != nil {
-			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
-		}
-	} else {
-		return fmt.Errorf("there is no Pull Request branch and can't download diff file")
+		return nil
 	}
+
+	return applyDiff(gitCmd, mergeBranch, branchDest, buildURL, apiToken, depth, id)
+}
+
+func applyDiff(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
+	patch, err := getDiffFile(buildURL, apiToken, id)
+	if err != nil {
+		return fmt.Errorf("there is no Pull Request branch and can't download diff file, error: %s", err)
+	}
+
+	if err := run(gitCmd.Checkout(branchDest)); err != nil {
+		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+	}
+	if err := run(gitCmd.Apply(patch)); err != nil {
+		return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
+	}
+
 	return nil
 }
 
