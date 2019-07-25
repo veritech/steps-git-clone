@@ -79,7 +79,12 @@ func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
 	}()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d", resp.StatusCode)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Warnf("Could not read response body, error: %s", err)
+		}
+
+		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d, body: %s", resp.StatusCode, body)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -209,6 +214,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			}
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
+		log.Errorf("Error getting diff file: %s", err)
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
