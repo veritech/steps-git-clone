@@ -24,7 +24,7 @@ inputs:
     opts:
       title: "Git repository URL"
       is_required: true
-      is_dont_change_value: true
+      is_dont_change_value: false
   - clone_into_dir: "$BITRISE_SOURCE_DIR"
     opts:
       title: "Clone destination (local) directory path"
